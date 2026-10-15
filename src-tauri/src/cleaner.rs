@@ -8,6 +8,9 @@ use crate::categories::CleanupAction;
 use crate::error::AppError;
 use crate::process;
 
+/// macOS keeps this file in every folder of ~/Library/Containers, and only the system may remove
+/// it or the folder itself (both fail with "Operation not permitted"). Everything else inside can go.
+const CONTAINER_METADATA: &str = ".com.apple.containermanagerd.metadata.plist";
 const COMMAND_ERROR_LINES: usize = 5;
 /// Pruning a big Docker image store can take minutes; past this something is stuck.
 const COMMAND_LIMIT: Duration = Duration::from_secs(15 * 60);
@@ -40,12 +43,17 @@ pub fn execute(action: &CleanupAction, allowed_roots: &[PathBuf], discard: &dyn 
     match action {
         CleanupAction::DeletePermanently(path) => {
             ensure_inside(path, allowed_roots)?;
-            delete_permanently(path)?;
+            if is_app_container(path) {
+                empty_container(path)?;
+            } else {
+                delete_permanently(path)?;
+            }
             Ok(None)
         }
         CleanupAction::MoveToTrash(path) => {
             ensure_inside(path, allowed_roots)?;
-            discard.discard(path).map_err(|error| AppError::Trash(error.to_string()))?;
+            let target = if is_app_container(path) { gather_container_contents(path)? } else { path.clone() };
+            discard.discard(&target).map_err(|error| AppError::Trash(error.to_string()))?;
             Ok(None)
         }
         CleanupAction::RunCommand { program, args, envs } => run_command(program, args, envs).map(Some),
@@ -76,6 +84,35 @@ fn delete_permanently(path: &Path) -> io::Result<()> {
     } else {
         fs::remove_file(path)
     }
+}
+
+fn is_app_container(path: &Path) -> bool {
+    path.join(CONTAINER_METADATA).is_file()
+}
+
+/// Everything in a container except the metadata only macOS may remove.
+fn container_contents(container: &Path) -> io::Result<Vec<PathBuf>> {
+    Ok(fs::read_dir(container)?.flatten().map(|entry| entry.path()).filter(|path| !path.ends_with(CONTAINER_METADATA)).collect())
+}
+
+/// Frees a container's space while leaving the empty shell macOS protects.
+fn empty_container(container: &Path) -> io::Result<()> {
+    container_contents(container)?.iter().try_for_each(|entry| delete_permanently(entry))
+}
+
+/// Moves a container's contents into one folder inside it, named after the container, so the
+/// Trash gets a single item that can be put back whole.
+fn gather_container_contents(container: &Path) -> io::Result<PathBuf> {
+    let contents = container_contents(container)?;
+    let name = container.file_name().map(|name| name.to_string_lossy().into_owned()).unwrap_or_default();
+    let gathered = container.join(format!("{name} (conteúdo)"));
+    fs::create_dir(&gathered)?;
+    for entry in contents {
+        if let Some(entry_name) = entry.file_name() {
+            fs::rename(&entry, gathered.join(entry_name))?;
+        }
+    }
+    Ok(gathered)
 }
 
 fn run_command(program: &Path, args: &[&str], envs: &[(&str, &str)]) -> Result<String, AppError> {
@@ -211,6 +248,46 @@ mod tests {
 
         assert_eq!(*trash.discarded.borrow(), vec![root.join("cache")]);
         assert!(matches!(outside, Err(AppError::OutsideAllowedRoots(_))));
+    }
+
+    /// A folder shaped like the ones macOS keeps in ~/Library/Containers.
+    fn app_container(root: &Path) -> PathBuf {
+        let container = root.join("com.removed.App");
+        fs::create_dir_all(container.join("Data/Library")).expect("mkdir");
+        fs::write(container.join("Data/Library/state.bin"), b"state").expect("write");
+        fs::write(container.join("settings.plist"), b"settings").expect("write");
+        fs::write(container.join(CONTAINER_METADATA), b"metadata").expect("write");
+        container
+    }
+
+    fn names_in(folder: &Path) -> Vec<String> {
+        let mut names: Vec<String> = fs::read_dir(folder).expect("read").flatten().map(|entry| entry.file_name().to_string_lossy().into_owned()).collect();
+        names.sort();
+        names
+    }
+
+    #[test]
+    fn deleting_an_app_container_empties_it_and_keeps_what_macos_protects() {
+        let (_sandbox, root) = sandbox();
+        let container = app_container(&root);
+
+        delete(container.clone(), &root).expect("delete");
+
+        assert_eq!(names_in(&container), vec![CONTAINER_METADATA.to_owned()]);
+    }
+
+    #[test]
+    fn trashing_an_app_container_sends_its_contents_as_one_folder() {
+        let (_sandbox, root) = sandbox();
+        let container = app_container(&root);
+        let trash = RecordingTrash::default();
+
+        execute(&CleanupAction::MoveToTrash(container.clone()), std::slice::from_ref(&root), &trash).expect("trash");
+
+        let gathered = container.join("com.removed.App (conteúdo)");
+        assert_eq!(*trash.discarded.borrow(), vec![gathered.clone()]);
+        assert_eq!(names_in(&gathered), vec!["Data".to_owned(), "settings.plist".to_owned()]);
+        assert!(container.join(CONTAINER_METADATA).exists());
     }
 
     #[test]
