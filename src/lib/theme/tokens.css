@@ -1,0 +1,78 @@
+/* Sam is the gardener: the disk is a plot of ground, categories are beds, cleaning clears them.
+   Colors come from a kitchen garden (lichen, loam, moss, forget-me-not, wheat, plum); type pairs a
+   seed-packet Clarendon (Besley) with a highly legible sans for the explanations. */
+:root {
+  --font-display: 'Besley', Rockwell, Georgia, serif;
+  --font-text: 'Atkinson Hyperlegible Next', -apple-system, ui-sans-serif, sans-serif;
+
+  --radius-small: 4px;
+  --radius-control: 8px;
+  --radius-panel: 12px;
+
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-quick: 160ms;
+  --duration-settle: 520ms;
+
+  color-scheme: light;
+  --ground: #e8ece4;
+  --paper: #f6f8f3;
+  --paper-sunk: #dde3d6;
+  --rule: #cbd3c2;
+  --ink: #22281f;
+  --ink-soft: #5b6455;
+  --soil: #a3ac96;
+  --moss: #4e7a4c;
+  --moss-ink: #f6f8f3;
+  --sprout: #6b9e3f;
+  --caution: #8a6100;
+  --harm: #9b3348;
+  --focus-ring: #2f5d8a;
+
+  --plot-1: #4e7a4c;
+  --plot-2: #4f7299;
+  --plot-3: #8f6b1f;
+  --plot-4: #7d4e6d;
+  --plot-5: #357a76;
+  --plot-6: #7f6443;
+  --plot-7: #6a5d9e;
+  --plot-8: #5f682b;
+  --plot-ink: #f6f8f3;
+  --scrim: rgb(34 40 31 / 0.34);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --ground: #161c17;
+    --paper: #1e251f;
+    --paper-sunk: #121713;
+    --rule: #2e3a2f;
+    --ink: #e3e9dd;
+    --ink-soft: #9aa593;
+    --soil: #3d4a3d;
+    --moss: #86b783;
+    --moss-ink: #132014;
+    --sprout: #9fd16b;
+    --caution: #e2b04f;
+    --harm: #e8899a;
+    --focus-ring: #9cc3ea;
+
+    --plot-1: #6f9e6c;
+    --plot-2: #7d9fc4;
+    --plot-3: #cfa94f;
+    --plot-4: #a7769a;
+    --plot-5: #5fa9a4;
+    --plot-6: #a88b66;
+    --plot-7: #a397d6;
+    --plot-8: #a7b05e;
+    --plot-ink: #10150f;
+    --scrim: rgb(0 0 0 / 0.55);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-quick: 0ms;
+    --duration-settle: 0ms;
+  }
+}

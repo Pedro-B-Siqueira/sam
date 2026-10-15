@@ -1,0 +1,123 @@
+.button-primary,
+.button-quiet,
+.button-harm {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 16px;
+  border-radius: var(--radius-control);
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    filter var(--duration-quick) var(--ease),
+    background-color var(--duration-quick) var(--ease);
+}
+
+.button-primary {
+  border: 0;
+  background: var(--moss);
+  color: var(--moss-ink);
+}
+
+.button-harm {
+  border: 0;
+  background: var(--harm);
+  color: var(--paper);
+}
+
+.button-primary:hover:not(:disabled),
+.button-harm:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.button-quiet {
+  border: 1px solid var(--rule);
+  background: var(--paper);
+}
+
+.button-quiet:hover:not(:disabled) {
+  background: var(--paper-sunk);
+}
+
+.button-primary:disabled,
+.button-quiet:disabled,
+.button-harm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Opens or closes extra content; looks like a control even before hover. */
+.button-disclosure {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 12px 0 10px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-control);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background-color var(--duration-quick) var(--ease);
+}
+
+.button-disclosure:hover {
+  background: var(--paper-sunk);
+}
+
+.button-disclosure::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  margin-right: 2px;
+  border-right: 1.8px solid var(--moss);
+  border-bottom: 1.8px solid var(--moss);
+  transform: rotate(-45deg);
+  transition: transform var(--duration-quick) var(--ease);
+}
+
+.button-disclosure[aria-expanded='true']::before,
+details[open] > summary.button-disclosure::before {
+  transform: rotate(45deg);
+}
+
+summary.button-disclosure {
+  list-style: none;
+}
+
+summary.button-disclosure::-webkit-details-marker {
+  display: none;
+}
+
+/* Toolbar actions in the header: small, bordered, with an icon, so they read as buttons at rest. */
+.button-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 11px 0 9px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-control);
+  background: var(--ground);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--duration-quick) var(--ease);
+}
+
+.button-tool svg {
+  color: var(--moss);
+}
+
+.button-tool:hover:not(:disabled) {
+  background: var(--paper-sunk);
+}
+
+.button-tool:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
