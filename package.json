@@ -1,7 +1,7 @@
 {
   "name": "sam",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "description": "Sam: limpeza de disco para quem programa no macOS, explicando o que cada item é e o que acontece ao apagar.",
   "type": "module",

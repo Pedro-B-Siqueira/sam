@@ -1,6 +1,6 @@
 [package]
 name = "sam"
-version = "0.1.0"
+version = "0.1.1"
 description = "Limpeza de disco para quem programa no macOS"
 license = "MIT"
 edition = "2024"
